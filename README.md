@@ -1,186 +1,132 @@
-# SignalDesk AI
+<div align="center">
 
-SignalDesk AI is a portfolio-grade SaaS platform for WhatsApp customer automation with AI, lead management, workflows, analytics and multi-tenant operations.
+# 💬 SignalDesk AI
 
-It is intentionally built like a commercial startup product: FastAPI backend, React dashboard, PostgreSQL, Redis, Celery workers, Docker Compose, mocked external integrations for local demos, and clear extension points for real WhatsApp Cloud API and OpenAI credentials.
+**Atención por WhatsApp con inteligencia artificial para negocios**
 
-## Product Capabilities
+[![Tests](https://github.com/virginiacastellano/SignalDesk-AI/actions/workflows/tests.yml/badge.svg)](https://github.com/virginiacastellano/SignalDesk-AI/actions/workflows/tests.yml)
 
-- WhatsApp Cloud API adapter for inbound webhooks, outbound text messages and templates.
-- AI assistant service using OpenAI Responses API with recent conversation context.
-- Configurable bot builder for welcome copy, fallback replies, menu keywords and handoff keywords.
-- Interactive WhatsApp-style menus with clickable options in the local dashboard demo.
-- Demo reset endpoint to restore clean tenant data before a portfolio walkthrough.
-- Multi-tenant data model with tenants, users, memberships, roles and tenant-scoped resources.
-- JWT authentication with role-ready authorization boundaries.
-- Lead CRM, conversation history, tags, bot handoff state and message delivery status.
-- Workflow engine foundation for rules, follow-ups, tagging and team assignment.
-- Celery background tasks for follow-ups and integration sync jobs.
-- SaaS dashboard UI with inbox, lead intelligence, bot status, workflow status and analytics.
-- Mock Google Sheets, Gmail and CRM integrations for local demos.
-- Dockerized infrastructure with PostgreSQL, Redis, FastAPI, Celery, React and Nginx.
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-37814A?style=flat-square&logo=celery&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)
 
-## Tech Stack
+</div>
 
-Backend: Python, FastAPI, SQLAlchemy 2, PostgreSQL, Redis, Celery, Pydantic, JWT.
+## 💡 Mi idea
 
-Frontend: React, Vite, lucide-react, responsive CSS inspired by modern SaaS dashboards.
+Muchos negocios atienden a sus clientes por WhatsApp a mano: responden las mismas preguntas una y otra vez, pierden consultas fuera de horario y no tienen un registro ordenado de quién preguntó qué.
 
-Infrastructure: Docker Compose, Nginx reverse proxy, environment-driven configuration.
+SignalDesk AI es una plataforma SaaS que construí para resolver eso: **un bot con inteligencia artificial responde, organiza los contactos como potenciales clientes y deriva a una persona cuando hace falta**. Varios negocios pueden usar la misma plataforma, cada uno con sus datos separados.
 
-AI: OpenAI Python SDK through the Responses API.
+## ✨ Qué hace
 
-## Repository Layout
+- 🤖 **Bot con IA:** responde con el contexto de la conversación y detecta cuándo derivar a una persona.
+- 📋 **Menús interactivos de WhatsApp** configurables desde un panel (bienvenida, respuestas, palabras clave).
+- 👥 **CRM de contactos:** historial de conversaciones, etiquetas y estado de cada potencial cliente.
+- ⚙️ **Workflows:** reglas, seguimientos automáticos y asignación al equipo.
+- 📊 **Analítica** en un dashboard.
+- 🏢 **Multi-tenant:** cada negocio ve solo sus datos, con usuarios y roles (owner, admin, agente, analista).
+- 🔌 **Integraciones simuladas** con Google Sheets, Gmail y CRM, listas para conectar las reales.
 
-```text
-whatsapp-ai-saas/
-  backend/
-    app/
-      api/                  FastAPI routers and dependencies
-      core/                 config, logging, security, error handling
-      domain/               database models and request/response schemas
-      infrastructure/       database, repositories, provider adapters
-      services/             application use cases
-      workers/              Celery app and tasks
-      seeds/                demo seed data
-    tests/
-  frontend/
-    src/
-      data/                 demo dashboard data
-      main.jsx              SaaS product UI
-      styles.css            responsive design system
-  infra/nginx/
-  docs/
+## 🏗️ Arquitectura
+
+```mermaid
+flowchart LR
+    W[📱 WhatsApp<br/>Cloud API] -->|webhook| API[⚡ FastAPI]
+    UI[🖥️ Dashboard<br/>React] --> NG[Nginx] --> API
+    API --> DB[(PostgreSQL)]
+    API --> AI[🤖 OpenAI]
+    API --> R[(Redis)]
+    R --> CW[Celery workers<br/>seguimientos y sync]
 ```
 
-## Quick Start
+El backend sigue una arquitectura en capas:
 
-1. Copy backend environment variables:
+- `api/`: rutas de FastAPI e inyección de dependencias
+- `services/`: casos de uso (autenticación, conversaciones, analítica, workflows)
+- `domain/`: modelos de SQLAlchemy y esquemas de Pydantic
+- `infrastructure/`: base de datos, repositorios y adaptadores de WhatsApp y OpenAI
+- `workers/`: tareas en segundo plano con Celery
+
+Los proveedores externos están detrás de **adaptadores**: si faltan las credenciales de WhatsApp, los envíos se simulan y la demo funciona igual. La IA devuelve siempre la misma estructura (`reply`, `intent`, `handoff_required`), así el resto del sistema no depende de un modelo en particular.
+
+Más detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## ▶️ Cómo correrlo
+
+Requiere Docker.
 
 ```bash
 cp backend/.env.example backend/.env
-```
-
-2. Start the full stack:
-
-```bash
 docker compose up --build
-```
-
-3. Seed demo data:
-
-```bash
 docker compose exec backend python -m app.seeds.seed_demo
 ```
 
-4. Open the product:
+- Dashboard: http://localhost:5173
+- Documentación de la API: http://localhost:8000/docs
+- Gateway Nginx: http://localhost:8080
 
-- Frontend: http://localhost:5173
-- API docs: http://localhost:8000/docs
-- Nginx gateway: http://localhost:8080
-
-Demo credentials after seeding:
+Usuario de la demo, creado por el seed (solo para uso local):
 
 ```text
 founder@novagrowth.io
 Password123!
 ```
 
-## V1 Demo Flow
+### Recorrido de la demo
 
-For a clean portfolio demo:
+1. Iniciá sesión y tocá **Reset demo**.
+2. En el simulador de WhatsApp, usá el preset **Menu** y elegí **Planes y precios**.
+3. Respondé como agente desde el compositor.
+4. Cambiá el mensaje de bienvenida en **Bot Builder**, guardá y volvé a simular **Menu**.
 
-1. Login at `http://localhost:5173`.
-2. Click `Reset demo`.
-3. Use the `Menu` preset in the WhatsApp simulator.
-4. Click `Planes y precios` inside the interactive menu.
-5. Use the composer to send a manual agent response.
-6. Edit the welcome message in `Bot Builder`, save, and simulate `Menu` again.
+Más detalle en [docs/DEMO_FLOW.md](docs/DEMO_FLOW.md).
 
-See [docs/DEMO_FLOW.md](docs/DEMO_FLOW.md) for the short video script.
+## 🔌 Conectar servicios reales
 
-## API Highlights
-
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/bot-config`
-- `PUT /api/v1/bot-config`
-- `POST /api/v1/demo/reset`
-- `GET /api/v1/conversations`
-- `POST /api/v1/conversations/messages`
-- `GET /api/v1/leads`
-- `POST /api/v1/workflows`
-- `GET /api/v1/analytics/dashboard`
-- `GET /api/v1/whatsapp/webhook`
-- `POST /api/v1/whatsapp/webhook`
-- `POST /api/v1/whatsapp/simulate`
-- `POST /api/v1/whatsapp/interactive-reply`
-- `POST /api/v1/whatsapp/messages/text`
-- `POST /api/v1/integrations/google-sheets/sync`
-
-## WhatsApp Setup
-
-Set these variables in `backend/.env` when using real WhatsApp Cloud API credentials:
+En `backend/.env`:
 
 ```env
+# WhatsApp Cloud API
 WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_BUSINESS_ACCOUNT_ID=
 WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_VERIFY_TOKEN=
 PUBLIC_WEBHOOK_URL=
-```
 
-Configure the Meta webhook URL as:
-
-```text
-https://your-domain.com/api/v1/whatsapp/webhook
-```
-
-For portfolio demos, missing WhatsApp credentials automatically trigger mocked sends.
-
-## OpenAI Setup
-
-Set:
-
-```env
+# OpenAI
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-5
+OPENAI_MODEL=
 ```
 
-The AI provider calls `client.responses.create(...)` and normalizes the output into:
+El webhook de Meta se configura en `https://tu-dominio.com/api/v1/whatsapp/webhook`.
 
-- `reply`
-- `intent`
-- `handoff_required`
+## 🧪 Tests
 
-This keeps the business logic decoupled from a single AI vendor or model family.
+```bash
+cd backend
+python -m pytest
+```
 
-## Deployment Notes
+Cubren el health check, la configuración por defecto del bot y la seguridad: hash de contraseñas, tokens JWT con tenant y rol, rechazo de tokens alterados y control de permisos por rol. Corren en GitHub Actions con cada cambio.
 
-For production, deploy the backend and worker as separate services. Use managed PostgreSQL and Redis, store secrets in a cloud secret manager, terminate TLS at the load balancer or Nginx, and run Alembic migrations during release. The V1 portfolio build auto-creates tables in development to keep the demo easy to run.
+## 🗺️ Próximos pasos
 
-Recommended hardening:
+- [ ] Migraciones con Alembic
+- [ ] Row Level Security en PostgreSQL para reforzar el aislamiento entre negocios
+- [ ] Claves de idempotencia para los webhooks de WhatsApp
+- [ ] Trazabilidad con OpenTelemetry
+- [ ] Facturación y suscripciones (Mercado Pago o Stripe)
+- [ ] Más tests de servicios y endpoints
 
-- Add Alembic migration files and migration CI checks.
-- Add row-level security in PostgreSQL for tenant isolation.
-- Persist WhatsApp webhook idempotency keys.
-- Add OpenTelemetry tracing and structured request IDs.
-- Split teams, permissions and audit logs into dedicated modules.
-- Add billing/subscription entities for Stripe or Mercado Pago.
+---
 
-## Portfolio Story
+<div align="center">
 
-This project is designed to demonstrate senior backend judgment:
+Hecho con 💜 por [Virginia Castellano](https://github.com/virginiacastellano)
 
-- clear module boundaries,
-- tenant-scoped data access,
-- provider adapters for external APIs,
-- async FastAPI implementation,
-- background task architecture,
-- realistic SaaS dashboard,
-- production-oriented Docker setup,
-- and an upgrade path from demo mocks to real integrations.
-
-## Workana Description
-
-SignalDesk AI is a multi-tenant SaaS demo for WhatsApp customer automation. It includes a FastAPI backend, JWT authentication, PostgreSQL data model, Redis/Celery jobs, a React dashboard, WhatsApp webhook simulation, interactive bot menus, handoff to human agents, workflow creation, analytics and a configurable bot builder. It is designed as a production-style foundation for businesses that want to automate customer conversations and lead qualification over WhatsApp.
+</div>
